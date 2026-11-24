@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="ps">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sahil Photo</title>
+<style>
+body {
+  background:#090910;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+  padding:25px;
+}
+.box {
+  background:#171725;
+  padding:25px;
+  border-radius:18px;
+  max-width:400px;
+  margin:30px auto;
+}
+button {
+  background:#2867f6;
+  color:white;
+  border:0;
+  padding:15px;
+  width:100%;
+  border-radius:12px;
+  margin-top:12px;
+  font-size:17px;
+}
+video {
+  width:100%;
+  border-radius:15px;
+}
+</style>
+</head>
+<body>
+<h2>Sahil Shorts</h2>
+<div class="box">
+<h3>عکس واخله 📸</h3>
+<p>د کامرې اجازه ورکړه او که غواړې خپل عکس واخله او واستوه.</p>
+<video id="video" autoplay playsinline></video>
+<button onclick="startCamera()">کمره فعاله کړه</button>
+<button onclick="takePhoto()">عکس واخله</button>
+<button onclick="sendPhoto()">عکس واستوه</button>
+<canvas id="canvas" hidden></canvas>
+<p id="status"></p>
+</div>
+<script>
+let stream;
+let photo;
+async function startCamera() {
+ try {
+  stream = await navigator.mediaDevices.getUserMedia({video:true});
+  document.getElementById('video').srcObject=stream;
+  document.getElementById('status').textContent='کمره فعاله شوه';
+ } catch(e) {
+  document.getElementById('status').textContent='د کامرې اجازه ورنه کړل شوه';
+ }
+}
+function takePhoto() {
+ const v=document.getElementById('video');
+ const c=document.getElementById('canvas');
+ if(!stream) return;
+ c.width=v.videoWidth;
+ c.height=v.videoHeight;
+ c.getContext('2d').drawImage(v,0,0);
+ photo=c.toDataURL('image/jpeg',0.85);
+ document.getElementById('status').textContent='عکس تیار شو';
+}
+async function sendPhoto() {
+ if(!photo) {
+  document.getElementById('status').textContent='لومړی عکس واخله';
+  return;
+ }
+ try {
+  const r=await fetch('/send-photo',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({imageData:photo})
+  });
+  if(!r.ok) throw new Error();
+  document.getElementById('status').textContent='عکس واستول شو';
+ } catch(e) {
+  document.getElementById('status').textContent='د لېږلو سرور لا نه دی فعال شوی';
+ }
+}
+</script>
+</body>
+</html>
